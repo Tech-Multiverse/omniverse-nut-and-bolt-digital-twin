@@ -7,8 +7,8 @@
                 double radius = 5
             }
             dictionary Perspective = {
-                double3 position = (0.023035337531295216, 0.056904393256026864, 0.004171729540458611)
-                double3 target = (-0.013596219150244174, 0.009985927272772178, 0.013822701858939442)
+                double3 position = (0.020260474022815275, 0.05823063620464165, 0.001545290882003746)
+                double3 target = (-0.014156423106137888, 0.01100945059316482, 0.01644466950288109)
             }
             dictionary Right = {
                 double3 position = (0, -5, 0)
@@ -41,6 +41,9 @@
     endTimeCode = 1000000
     metersPerUnit = 1
     startTimeCode = 0
+    subLayers = [
+        @metrics:UnitsAdjust-183a5f212019bc1d64fefb80e86ce674.metricsAssembler@
+    ]
     timeCodesPerSecond = 60
     upAxis = "Z"
 )
@@ -84,7 +87,7 @@ def Xform "World"
 
     def Xform "Bolt" (
         prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysxRigidBodyAPI"]
-        references = @./HexAssembly/bolt.usd@
+        references = @D:/omniverse/threading_sim/HexAssembly/bolt.usd@
     )
     {
         bool physics:kinematicEnabled = 0
@@ -100,7 +103,7 @@ def Xform "World"
         )
         {
             float drive:angular:physics:damping = 100000
-            float drive:angular:physics:targetVelocity = -250
+            float drive:angular:physics:targetVelocity = 250
             uniform token physics:axis = "Z"
             rel physics:body1 = </World/Bolt>
             float physics:breakForce = 3.4028235e38
@@ -122,7 +125,7 @@ def Xform "World"
 
     def Xform "Nut" (
         prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysxRigidBodyAPI"]
-        references = @./HexAssembly/nut.usd@
+        references = @D:/omniverse/threading_sim/HexAssembly/nut.usd@
     )
     {
         bool physics:kinematicEnabled = 0
@@ -211,7 +214,7 @@ def "Render" (
                 uint omni:rtx:viewTile:limit = 4294967295
                 rel orderedVars = </Render/Vars/LdrColor>
                 custom bool overrideClipRange = 0
-                uniform int2 resolution = (1590, 1026)
+                uniform int2 resolution = (1710, 1024)
             }
         }
     }

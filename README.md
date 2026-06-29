@@ -3,9 +3,9 @@ This repository provides a digital twin implementation of a nut-and-bolt assembl
 
 It leverages the rack and pinion joint to simulate linear motion from a rotational drive.
 
-[Project Article]("https://tech-multiverse.com/projects/how-to-create-a-nut-and-bolt-digital-twin-in-nvidia-omniverse-isaac-sim/")
+[Project Article](https://tech-multiverse.com/projects/how-to-create-a-nut-and-bolt-digital-twin-in-nvidia-omniverse-isaac-sim/)
 
-[Project Video]("https://youtu.be/sS73u0BHVP4")
+[Project Video](https://youtu.be/sS73u0BHVP4)
 
 <img src="_images/project_screenshot.png" alt="Project Screenshot" width="600"/>
 

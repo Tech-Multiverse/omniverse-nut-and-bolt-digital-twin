@@ -7,6 +7,8 @@ It leverages the rack and pinion joint to simulate linear motion from a rotation
 
 [Project Video](https://youtu.be/sS73u0BHVP4)
 
+[2 Minute YouTube Short Tutorial!](https://www.youtube.com/shorts/wFAfReHZda4)
+
 <img src="_images/project_screenshot.png" alt="Project Screenshot" width="600"/>
 
 ## File Overview

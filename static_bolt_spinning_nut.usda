@@ -106,7 +106,7 @@ def Xform "World"
             {
                 float drive:linear:physics:damping = 100000
                 float drive:linear:physics:stiffness = 0
-                float drive:linear:physics:targetVelocity = -0.00063
+                float drive:linear:physics:targetVelocity = 0.00063
                 uniform token drive:linear:physics:type = "force"
                 uniform token physics:axis = "Z"
                 rel physics:body0 = </World/NutBoltAssembly/Bolt>
@@ -154,7 +154,7 @@ def Xform "World"
                 float physics:lowerLimit = -1000000
                 float physics:upperLimit = 1000000
                 float physxMimicJoint:rotZ:dampingRatio = 0
-                float physxMimicJoint:rotZ:gearing = -396850.4
+                float physxMimicJoint:rotZ:gearing = -240000
                 float physxMimicJoint:rotZ:naturalFrequency = 0
                 float physxMimicJoint:rotZ:offset = 0
                 rel physxMimicJoint:rotZ:referenceJoint = </World/NutBoltAssembly/NutSlide/NutSlidePrismatic>

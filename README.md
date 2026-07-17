@@ -1,55 +1,65 @@
 # Omniverse Nut and Bolt Digital Twin
-This repository provides a digital twin implementation of a nut-and-bolt assembly, designed for NVIDIA Omniverse Isaac Sim.
+This repository explores two ways to model screw motion in a nut-and-bolt assembly inside NVIDIA Omniverse Isaac Sim:
 
-It leverages the rack and pinion joint to simulate linear motion from a rotational drive.
+1. **Driven bolt + rack-and-pinion joint** — the bolt rotates and a dedicated gear/screw constraint drives the nut.
+2. **(NEW)  Fixed bolt + articulation mimic joint** — an intermediate slider is driven linearly, and a mimic joint makes the nut spin and travel.
+---
+> 🎬 **Coming Soon!** I'll publish a new video about the fixed bolt version and will update to the existing article with those additional details soon.
+---
 
 [Project Article](https://tech-multiverse.com/projects/how-to-create-a-nut-and-bolt-digital-twin-in-nvidia-omniverse-isaac-sim/)
 
-[Project Video](https://youtu.be/sS73u0BHVP4)
+[Project Video (rack-and-pinion)](https://youtu.be/sS73u0BHVP4)
 
-[2 Minute YouTube Short Tutorial!](https://www.youtube.com/shorts/wFAfReHZda4)
+[2 Minute YouTube Short Tutorial! (rack-and-pinion)](https://www.youtube.com/shorts/wFAfReHZda4)
 
 <img src="_images/project_screenshot.png" alt="Project Screenshot" width="600"/>
 
 ## File Overview
 
-* `official_hex_sim.usda`: The Universal Scene Description (USD) file serving as the final digital twin example. This file contains the stage hierarchy, prim properties, and physics constraints required to simulate the nut-and-bolt assembly within Omniverse Isaac Sim.
+* `official_hex_sim.usda` — **driven bolt using a rack-and-pinion joint.** The bolt is spun by a `PhysicsRevoluteJoint` with an angular drive, and the nut is coupled to it by a `PhysxPhysicsRackAndPinionJoint`. This is the original Tech-Multiverse example and the reliable approach when the bolt is the driven part.
 
-* `/hex_bolt`: Contains the source CAD assets (.jt) and the USD representing the bolt and nut geometry, which are referenced in the main simulation.
+* `static_bolt_spinning_nut.usda` — **(NEW)  fixed bolt using an articulation mimic joint.** The bolt is fixed to the world, an intermediate `NutSlide` link is driven by a `PhysicsPrismaticJoint`, and the visible nut follows through a `PhysxMimicJointAPI:rotZ`. This shows how to use mimic joints when the driven joint can be the prismatic leader.
 
-* `/claude_sample`: A supplemental directory containing the Claude generated example Python script (`screw.py`) and the simulation USD (`claude_scripted.usda`) that example script created.
+* `/hex_bolt` — Contains the source CAD assets (.jt) and the USD representing the bolt and nut geometry, which are referenced in the main simulation.
+
+* `/claude_sample` — A supplemental directory containing the Claude generated example Python script (`screw.py`) and the simulation USD (`claude_scripted.usda`) that example script created, which inspired this project!
+
+---
 
 ## Versions of the Simulation
+> ⚠️ **The Following is AI Generated**  
+>Everything works, but I'm actively studying this and will update the documentation after I validate this information. Trust at your own risk! 😂
 
-This repo now contains three related USD setups so you can pick the one that matches your project.
+This repo contains two related USD setups. They produce different *visual* results, but they both rely on the same thread-pitch math. The important difference is which joint is driven and which physics constraint is used.
 
-### 1. `official_hex_sim.usda` — original rack-and-pinion version
-
-* The **bolt** is connected to the world by a `PhysicsRevoluteJoint` and spun by an angular drive (`drive:angular:physics:targetVelocity = 250`).
-* The **nut** is connected to the world by a `PhysicsPrismaticJoint` and is therefore constrained to pure up/down motion.
-* A `PhysxPhysicsRackAndPinionJoint` couples the bolt's rotation to the nut's translation. Its `physics:ratio` (396,825) is `360 / pitch`, which makes one full bolt revolution move the nut by the thread pitch.
+### 1. `official_hex_sim.usda` — bolt spins, nut travels (rack-and-pinion)
 
 This is the version from the original Tech-Multiverse article and video.
 
-### 2. `official_hex_sim_no_rack_and_pinion.usda` — same motion, no rack-and-pinion
+* The **bolt** is connected to the world by a `PhysicsRevoluteJoint` and is spun by an angular drive (`drive:angular:physics:targetVelocity = 250`).
+* The **nut** is connected to the world by a `PhysicsPrismaticJoint`, so it can only move up/down.
+* A `PhysxPhysicsRackAndPinionJoint` couples the bolt's rotation to the nut's translation. Its `physics:ratio` (396,825) is `360 / pitch`, which means one full bolt revolution moves the nut by exactly the thread pitch.
 
-* Identical behavior: the bolt spins and the nut travels up/down the same Z axis.
-* Instead of the rack-and-pinion joint, the nut's `PhysicsPrismaticJoint` has a `NewtonMimicAPI` applied to it.
-* `newton:mimicJoint` points to the bolt's `RevoluteJoint`, and `newton:mimicCoef1` is the thread pitch per degree (`pitch / 360`).
-* The bodies live under a `NutBoltAssembly` prim that has `NewtonArticulationRootAPI` applied, which is required because `NewtonMimicAPI` only works between joints in the same articulation.
-* This is a cleaner single-USD alternative when you want to avoid the rack-and-pinion joint and don't need a Python script.
+**Why this works:** the rack-and-pinion joint is a *gear/screw* constraint. It is designed to turn a revolute degree of freedom into a prismatic degree of freedom at a fixed ratio, and it handles large ratios and high drive torques without fighting the drive. When the bolt spins, the rack-and-pinion constraint directly computes the matching nut velocity.
 
-### 3. `static_bolt_spinning_nut.usda` — bolt fixed, nut spins and travels
+### 2. `static_bolt_spinning_nut.usda` — bolt fixed, nut spins and travels (mimic joint)
 
 * The **bolt is fixed** to the world with a `PhysicsFixedJoint`.
 * An intermediate `NutSlide` link is connected to the bolt by a prismatic joint.
 * The visible **nut** is connected to `NutSlide` by a revolute joint.
 * A `PhysxMimicJointAPI:rotZ` on the nut's revolute joint makes the nut spin as `NutSlide` translates.
-* Why the drive is on the slider: `PhysxMimicJointAPI` only allows `rotX`/`rotY`/`rotZ` as its instance name, so the *follower* joint must be a revolute. That forces the prismatic joint to be the leader, which is where the linear drive lives.
+* The linear drive is on the `NutSlidePrismatic` joint (`drive:linear:physics:targetVelocity = 0.00063`), not on the nut's revolute.
+
+**Why it is set up this way:** `PhysxMimicJointAPI` is an articulation-level, position-based constraint that can only mimic *rotational* degrees of freedom (`rotX`, `rotY`, or `rotZ`). That means the follower joint must be a revolute, so the driven joint must be the prismatic *leader*. In this scene the bolt is fixed so it can act as the stationary guide, while the slider is driven and the nut follows as the revolute follower.
+
+### Why not a mimic-joint version where the bolt spins?
+
+We tried replacing the rack-and-pinion joint with `PhysxMimicJointAPI` in `official_hex_sim_no_rack_and_pinion.usda`. It did not work. `PhysxMimicJointAPI` is excellent for underactuated mechanisms (grippers, parallel linkages) but is not a true screw/gear joint. With a fine thread the gear ratio is very large (~400,000 deg/m), the reflected inertia becomes huge, and a velocity drive on the follower conflicts with the position-based mimic constraint. The result is that the nut drops or the simulation stalls. The rack-and-pinion joint remains the correct tool when the bolt is the driven part.
 
 ## Thread-pitch math
 
-All three versions use the same screw relationship:
+Both versions use the same screw relationship:
 
 ```text
 nut_travel_per_revolution = pitch
@@ -58,7 +68,6 @@ linear_velocity           = angular_velocity (deg/s) * (pitch / 360)
 
 * For the **rack-and-pinion** joint: `physics:ratio = 360 / pitch` (degrees per meter).
 * For `PhysxMimicJointAPI`: `gearing = -(360 / pitch)`.
-* For `NewtonMimicAPI` on a prismatic follower driven by a revolute leader: `newton:mimicCoef1 = pitch / 360`.
 
 ### Example: 28 TPI / ~0.907 mm pitch
 
@@ -79,6 +88,7 @@ If your bolt has a different pitch, replace the relevant constant (`ratio`, `gea
 ## Tuning notes
 
 * `drive:angular:physics:targetVelocity` or `drive:linear:physics:targetVelocity` changes only the *speed*, not the pitch ratio.
-* `physics:lowerLimit` / `physics:upperLimit` on the prismatic joint controls how far the nut can travel.
+* `physics:lowerLimit` / `physics:upperLimit` on the prismatic joint controls how far the nut can travel *relative to its start pose*; they are not start-position values.
+* To change the nut's starting height, move the `Nut` prim's `xformOp:translate` Z and set the prismatic joint's `physics:localPos0` Z to the same value (with `physics:lowerLimit = 0`).
 * Self-collisions are disabled in the articulation-based files to prevent the nut and bolt collision meshes from fighting the screw constraint.
 

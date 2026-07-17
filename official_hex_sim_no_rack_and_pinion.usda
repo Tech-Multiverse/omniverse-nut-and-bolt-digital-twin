@@ -7,8 +7,8 @@
                 double radius = 5
             }
             dictionary Perspective = {
-                double3 position = (0.017295585325391164, 0.07376733370715478, 0.014028798324086406)
-                double3 target = (-0.025646213156667586, 0.0060831461159781275, 0.01692829433398063)
+                double3 position = (0.05162871469388322, 0.04657976740605083, 0.01444098192697504)
+                double3 target = (-0.0011512242011863308, -0.019972843794894286, 0.01615322799293502)
             }
             dictionary Right = {
                 double3 position = (0, -5, 0)
@@ -21,7 +21,7 @@
             string boundCamera = "/OmniverseKit_Persp"
         }
         dictionary omni_layer = {
-            string authoring_layer = "./static_bolt_spinning_nut.usda"
+            string authoring_layer = "./official_hex_sim_no_rack_and_pinion.usda"
         }
         dictionary renderSettings = {
         }
@@ -36,6 +36,35 @@
 
 def Xform "World"
 {
+    def Xform "GroundPlane"
+    {
+        quatf xformOp:orient = (1, 0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (0, 0, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+        def Mesh "CollisionMesh"
+        {
+            uniform bool doubleSided = 0
+            int[] faceVertexCounts = [4]
+            int[] faceVertexIndices = [0, 1, 2, 3]
+            normal3f[] normals = [(0, 0, 1), (0, 0, 1), (0, 0, 1), (0, 0, 1)]
+            point3f[] points = [(-25, -25, 0), (25, -25, 0), (25, 25, 0), (-25, 25, 0)]
+            color3f[] primvars:displayColor = [(0.5, 0.5, 0.5)]
+            texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1)] (
+                interpolation = "varying"
+            )
+        }
+
+        def Plane "CollisionPlane" (
+            prepend apiSchemas = ["PhysicsCollisionAPI"]
+        )
+        {
+            uniform token axis = "Z"
+            uniform token purpose = "guide"
+        }
+    }
+
     def PhysicsScene "PhysicsScene" (
         prepend apiSchemas = ["PhysxSceneAPI"]
     )
@@ -43,10 +72,10 @@ def Xform "World"
     }
 
     def Xform "NutBoltAssembly" (
-        prepend apiSchemas = ["PhysicsArticulationRootAPI", "PhysxArticulationAPI"]
+        prepend apiSchemas = ["NewtonArticulationRootAPI"]
     )
     {
-        bool physxArticulation:enabledSelfCollisions = 0
+        bool newton:selfCollisionEnabled = 0
 
         def Xform "Bolt" (
             prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysxRigidBodyAPI"]
@@ -60,9 +89,22 @@ def Xform "World"
             double3 xformOp:translate = (0, 0, 0)
             uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
 
-            def PhysicsFixedJoint "BoltFixedJoint"
+            def PhysicsRevoluteJoint "RevoluteJoint" (
+                prepend apiSchemas = ["PhysicsDriveAPI:angular"]
+            )
             {
+                float drive:angular:physics:damping = 100000
+                float drive:angular:physics:stiffness = 0
+                float drive:angular:physics:targetVelocity = 250
+                uniform token drive:angular:physics:type = "force"
+                uniform token physics:axis = "Z"
                 rel physics:body1 = </World/NutBoltAssembly/Bolt>
+                float physics:breakForce = 3.4028235e38
+                float physics:breakTorque = 3.4028235e38
+                point3f physics:localPos0 = (0, 0, 0)
+                point3f physics:localPos1 = (0, 0, 0)
+                quatf physics:localRot0 = (1, 0, 0, 0)
+                quatf physics:localRot1 = (1, 0, 0, 0)
             }
 
             over "PolyShape" (
@@ -71,53 +113,6 @@ def Xform "World"
             {
                 uniform token physics:approximation = "convexHull"
                 bool physics:collisionEnabled = 1
-                token visibility = "inherited"
-            }
-        }
-
-        def Xform "NutSlide" (
-            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysxRigidBodyAPI", "PhysicsMassAPI"]
-        )
-        {
-            point3f physics:centerOfMass = (0, 0, 0)
-            float3 physics:diagonalInertia = (1e-8, 1e-8, 1e-8)
-            bool physics:kinematicEnabled = 0
-            float physics:mass = 0.1
-            quatf physics:principalAxes = (1, 0, 0, 0)
-            bool physics:rigidBodyEnabled = 1
-            quatd xformOp:orient = (1, 0, 0, 0)
-            double3 xformOp:scale = (1, 1, 1)
-            double3 xformOp:translate = (0, 0, 0.005304437984352175)
-            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
-
-            def Cube "Shape" (
-                prepend apiSchemas = ["PhysicsCollisionAPI"]
-            )
-            {
-                color3f[] primvars:displayColor = [(0.5, 0.5, 0.5)]
-                double size = 1
-                token visibility = "inherited"
-                float3 xformOp:scale = (0.002, 0.002, 0.002)
-                uniform token[] xformOpOrder = ["xformOp:scale"]
-            }
-
-            def PhysicsPrismaticJoint "NutSlidePrismatic" (
-                prepend apiSchemas = ["PhysxJointAPI", "PhysicsDriveAPI:linear"]
-            )
-            {
-                float drive:linear:physics:damping = 100000
-                float drive:linear:physics:stiffness = 0
-                float drive:linear:physics:targetVelocity = 0.00063
-                uniform token drive:linear:physics:type = "force"
-                uniform token physics:axis = "Z"
-                rel physics:body0 = </World/NutBoltAssembly/Bolt>
-                rel physics:body1 = </World/NutBoltAssembly/NutSlide>
-                point3f physics:localPos0 = (0, 0, 0.005304438)
-                point3f physics:localPos1 = (0, 0, 0)
-                quatf physics:localRot0 = (1, 0, 0, 0)
-                quatf physics:localRot1 = (1, 0, 0, 0)
-                float physics:lowerLimit = 0.0053
-                float physics:upperLimit = 0.02
             }
         }
 
@@ -128,11 +123,31 @@ def Xform "World"
         {
             bool physics:kinematicEnabled = 0
             bool physics:rigidBodyEnabled = 1
-            token visibility = "inherited"
             quatd xformOp:orient = (1, 0, 0, 0)
             double3 xformOp:scale = (0.001, 0.001, 0.001)
             double3 xformOp:translate = (0, 0, 0.005304437984352175)
             uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+            def PhysicsPrismaticJoint "PrismaticJoint" (
+                prepend apiSchemas = ["NewtonMimicAPI"]
+            )
+            {
+                float newton:mimicCoef0 = 0
+                float newton:mimicCoef1 = 0.0000025198412
+                bool newton:mimicEnabled = 1
+                rel newton:mimicJoint = </World/NutBoltAssembly/Bolt/RevoluteJoint>
+                uniform token physics:axis = "Z"
+                rel physics:body0 = </World/NutBoltAssembly/Bolt>
+                rel physics:body1 = </World/NutBoltAssembly/Nut>
+                float physics:breakForce = 3.4028235e38
+                float physics:breakTorque = 3.4028235e38
+                point3f physics:localPos0 = (0, 0, 0.005304438)
+                point3f physics:localPos1 = (0, 0, 0)
+                quatf physics:localRot0 = (1, 0, 0, 0)
+                quatf physics:localRot1 = (1, 0, 0, 0)
+                float physics:lowerLimit = 0.0053
+                float physics:upperLimit = 0.02
+            }
 
             over "PolyShape" (
                 prepend apiSchemas = ["PhysicsCollisionAPI", "PhysxCollisionAPI", "PhysxConvexHullCollisionAPI", "PhysicsMeshCollisionAPI"]
@@ -141,46 +156,7 @@ def Xform "World"
                 uniform token physics:approximation = "convexHull"
                 bool physics:collisionEnabled = 1
             }
-
-            def PhysicsRevoluteJoint "NutRevolute" (
-                prepend apiSchemas = ["PhysxJointAPI", "PhysxMimicJointAPI:rotZ"]
-            )
-            {
-                uniform token physics:axis = "Z"
-                rel physics:body0 = </World/NutBoltAssembly/NutSlide>
-                rel physics:body1 = </World/NutBoltAssembly/Nut>
-                point3f physics:localPos0 = (0, 0, 0)
-                point3f physics:localPos1 = (0, 0, 0)
-                quatf physics:localRot0 = (1, 0, 0, 0)
-                quatf physics:localRot1 = (1, 0, 0, 0)
-                float physics:lowerLimit = -1000000
-                float physics:upperLimit = 1000000
-                float physxMimicJoint:rotZ:dampingRatio = 0
-                float physxMimicJoint:rotZ:gearing = -240000
-                float physxMimicJoint:rotZ:naturalFrequency = 0
-                float physxMimicJoint:rotZ:offset = 0
-                rel physxMimicJoint:rotZ:referenceJoint = </World/NutBoltAssembly/NutSlide/NutSlidePrismatic>
-            }
         }
-    }
-
-    def DistantLight "DistantLight" (
-        prepend apiSchemas = ["ShapingAPI"]
-    )
-    {
-        float inputs:angle = -57.100002
-        bool inputs:enableColorTemperature = 0
-        float inputs:intensity = 3000
-        float inputs:shaping:cone:angle = 180
-        float inputs:shaping:cone:softness
-        float inputs:shaping:focus
-        color3f inputs:shaping:focusTint
-        asset inputs:shaping:ies:file
-        token visibility = "inherited"
-        quatd xformOp:orient = (0.8082199900385858, -0.30112634397264915, -0.054260046814115545, 0.5031493018850609)
-        double3 xformOp:scale = (1, 1, 1)
-        double3 xformOp:translate = (0, 0, 8.800000131130219)
-        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
     }
 }
 

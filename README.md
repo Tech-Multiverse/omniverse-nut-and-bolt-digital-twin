@@ -55,7 +55,8 @@ This is the version from the original Tech-Multiverse article and video.
 
 ### Why not a mimic-joint version where the bolt spins?
 
-We tried replacing the rack-and-pinion joint with `PhysxMimicJointAPI` in `official_hex_sim_no_rack_and_pinion.usda`. It did not work. `PhysxMimicJointAPI` is excellent for underactuated mechanisms (grippers, parallel linkages) but is not a true screw/gear joint. With a fine thread the gear ratio is very large (~400,000 deg/m), the reflected inertia becomes huge, and a velocity drive on the follower conflicts with the position-based mimic constraint. The result is that the nut drops or the simulation stalls. The rack-and-pinion joint remains the correct tool when the bolt is the driven part.
+We tried replacing the rack-and-pinion joint with `PhysxMimicJointAPI` in `official_hex_sim_no_rack_and_pinion.usda`. It did not work. `PhysxMimicJointAPI` is excellent for underactuated mechanisms (grippers, parallel linkages) but is not a true screw/gear joint. With a fine thread the gear ratio is very large (~400,000 deg/m), the reflected inertia becomes huge, and a velocity drive on the follower conflicts with the position-based mimic constraint. The result is that the nut drops or the simulation stalls. The rack-and-pinion joint _seems_ to be the correct tool when the bolt is the driven part. 
+> 📢 **However...** Rob plans to run more tests. 🤓
 
 ## Thread-pitch math
 

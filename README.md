@@ -4,14 +4,16 @@ This repository explores two ways to model screw motion in a nut-and-bolt assemb
 1. **Driven bolt + rack-and-pinion joint** — the bolt rotates and a dedicated gear/screw constraint drives the nut.
 2. **Fixed bolt + articulation mimic joint** — an intermediate slider is driven linearly, and a mimic joint makes the nut spin and travel.
 
+---
+
 [Project Article](https://tech-multiverse.com/projects/how-to-create-a-nut-and-bolt-digital-twin-in-nvidia-omniverse-isaac-sim/)
 
-[Project Video (rack-and-pinion)](https://youtu.be/sS73u0BHVP4)
+[Project Video v.1.0 (rack-and-pinion joint)](https://youtu.be/sS73u0BHVP4)
 
-[2 Minute YouTube Short Tutorial! (rack-and-pinion)](https://www.youtube.com/shorts/wFAfReHZda4)
+[2 Minute YouTube Short Tutorial! (rack-and-pinion joint)](https://www.youtube.com/shorts/wFAfReHZda4)
 
----
-> 🎬 **Coming Soon!** I'll publish a new video about the fixed bolt version soon.
+[Project Video v.2.0 (mimic joint)](https://youtu.be/3O88T9DAu18)
+
 ---
 
 <img src="_images/project_screenshot.png" alt="Project Screenshot" width="600"/>
